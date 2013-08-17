@@ -1,10 +1,28 @@
 // Code by JeeLabs http://news.jeelabs.org/code/
 // Released to the public domain! Enjoy!
-
-#ifndef _RTCLIB_H_
-#define _RTCLIB_H_
-
 // Simple general-purpose date/time class (no TZ / DST / leap second handling!)
+// AT: Inclusion of conditional compilation to handle EU Summer Time and UTC from :
+// # Scriptname : DS1307new.h
+// # Author     : Peter Schmelzer
+// # Contributor: Oliver Kraus
+// # contact    : schmelle2@googlemail.com
+// # Date       : 2010-11-01
+// # Version    : 0.2
+// # License    : cc-by-sa-3.0
+//
+// Into Adafruit library (which is based on JeeLabs code)
+//
+// AT: I am just merging code from different sources, merit (for good) goes to the people above, you can blame me for my bugs ;-)
+//
+// AT: not an expert in the topic but this code is under cc-by-sa-3.0 unless other legal terms apply
+
+
+#ifndef RTCLIB_H
+#define RTCLIB_H
+
+#define RTC_EUROPE
+#define RTC_UTC
+
 class DateTime {
 public:
     DateTime (uint32_t t =0);
@@ -31,10 +49,20 @@ protected:
 // RTC based on the DS1307 chip connected via I2C and the Wire library
 class RTC_DS1307 {
 public:
-    static uint8_t begin(void);
+  static uint8_t begin(void);
+  static void stopClock(void);
+  static void startClock(void);
     static void adjust(const DateTime& dt);
     uint8_t isrunning(void);
     static DateTime now();
+
+#ifdef RTC_UTC
+    static int8_t UTC;
+#endif
+    
+#ifdef RTC_EUROPE
+    static bool isMEZSummerTime(const DateTime &date);
+#endif
 };
 
 // RTC using the internal millis() clock, has to be initialized before use
@@ -48,5 +76,4 @@ public:
 protected:
     static long offset;
 };
-
-#endif // _RTCLIB_H_
+#endif
