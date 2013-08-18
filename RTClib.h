@@ -41,6 +41,8 @@ public:
     long secondstime() const;   
     // 32-bit times as seconds since 1/1/1970
     uint32_t unixtime(void) const;
+    
+    static DateTime fromTime2000(uint32_t t);
 
 protected:
     uint8_t yOff, m, d, hh, mm, ss;

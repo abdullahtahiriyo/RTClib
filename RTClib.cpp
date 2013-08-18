@@ -45,6 +45,13 @@ static long time2long(uint16_t days, uint8_t h, uint8_t m, uint8_t s) {
 DateTime::DateTime (uint32_t t) {
   t -= SECONDS_FROM_1970_TO_2000;    // bring to 2000 timestamp from 1970
 
+  *this=DateTime::fromTime2000(t);
+}
+
+DateTime DateTime::fromTime2000(uint32_t t)
+{
+    uint8_t yOff, m, d, hh, mm, ss;
+    
     ss = t % 60;
     t /= 60;
     mm = t % 60;
@@ -67,6 +74,9 @@ DateTime::DateTime (uint32_t t) {
         days -= daysPerMonth;
     }
     d = days + 1;
+    
+    return DateTime(2000+yOff,m,d,hh,mm,ss);
+  
 }
 
 DateTime::DateTime (uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t min, uint8_t sec) {
@@ -232,16 +242,25 @@ DateTime RTC_DS1307::now() {
   uint8_t m = bcd2bin(Wire.read());
   uint16_t y = bcd2bin(Wire.read()) + 2000;
   
-  #ifdef RTC_UTC    
-  DateTime temp= DateTime (y, m, d, hh+UTC, mm, ss);
-  #else
-  DateTime temp= DateTime (y, m, d, hh, mm, ss);
-  #endif
+  #ifdef RTC_UTC || RTC_EUROPE    
+    uint16_t days2000=date2days(y, m, d);
+    long time2000=time2long(days2000, hh, mm, ss);
+    time2000+=UTC*3600; 
+    
+    // Construct DateTime with UTC
+    DateTime temp=DateTime::fromTime2000(time2000);
 
-  #ifdef RTC_EUROPE
-    return isMEZSummerTime(temp)?DateTime (y, m, d, hh+UTC+1, mm, ss):temp;
+    #ifdef RTC_EUROPE
+    if(isMEZSummerTime(temp))
+    {
+      time2000+=3600;
+      temp=DateTime::fromTime2000(time2000);
+    }
+    #endif
+    
+    return temp;  
   #else
-    return temp;
+  return DateTime (y, m, d, hh, mm, ss);
   #endif
 }
 
